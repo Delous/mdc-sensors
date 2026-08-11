@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from functools import lru_cache
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,10 @@ class Settings:
     max_queue_rows: int
     db_pool_min_size: int
     db_pool_max_size: int
+
+    @property
+    def database_url_async(self) -> str:
+        return self.database_url
 
 
 def _get_int(name: str, default: int) -> int:
@@ -34,7 +39,7 @@ def load_settings() -> Settings:
         api_url=os.getenv("API_URL", "https://proka-bel.ru/api/v1/values"),
         database_url=os.getenv(
             "DATABASE_URL",
-            "postgresql://mdc:mdc@postgres:5432/mdc_sensors",
+            "postgresql+asyncpg://mdc:mdc@postgres:5432/mdc_sensors",
         ),
         send_interval_seconds=_get_float("SEND_INTERVAL_SECONDS", 5),
         http_timeout_seconds=_get_float("HTTP_TIMEOUT_SECONDS", 10),
@@ -47,3 +52,8 @@ def load_settings() -> Settings:
         db_pool_min_size=_get_int("DB_POOL_MIN_SIZE", 1),
         db_pool_max_size=_get_int("DB_POOL_MAX_SIZE", 5),
     )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return load_settings()

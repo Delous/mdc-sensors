@@ -3,7 +3,7 @@ import asyncio
 import aiohttp
 
 from config import Settings
-from db_repository import Measurement, MeasurementRepository
+from db.repository import Measurement, MeasurementRepository
 
 
 def prepare_request(

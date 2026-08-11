@@ -21,7 +21,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://mdc:mdc@postgres:5432/mdc_sensors
+      DATABASE_URL: postgresql+asyncpg://mdc:mdc@postgres:5432/mdc_sensors
       SERIAL_PORT: /dev/ttyUSB0
       SERIAL_BAUDRATE: 115200
       API_URL: https://proka-bel.ru/api/v1/values

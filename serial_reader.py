@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 import serial_asyncio
 
 from config import Settings
-from db_repository import MeasurementRepository
+from db.repository import MeasurementRepository
 
 PRUNE_EVERY_SAVED_ROWS = 100
 
