@@ -19,10 +19,16 @@ class Settings:
     failed_send_max_delay_seconds: float
 
 
+def _require_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"{name} environment variable is required")
+    return value
+
+
 def load_settings() -> Settings:
     return Settings(
         api_url=_require_env("API_URL"),
-        
         database_url="sqlite+aiosqlite:////data/measurements.db",
 
         serial_port="/dev/ttyUSB0",
@@ -35,13 +41,6 @@ def load_settings() -> Settings:
         http_timeout_seconds=10,
         failed_send_max_delay_seconds=60
     )
-
-
-def _require_env(name: str) -> str:
-    value = os.getenv(name)
-    if not value:
-        raise RuntimeError(f"{name} environment variable is required")
-    return value
 
 
 @lru_cache

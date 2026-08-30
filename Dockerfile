@@ -11,3 +11,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 CMD ["python", "main.py"]
+
+# docker build -t delous/mdc-sensors .
+# docker push delous/mdc-sensors
