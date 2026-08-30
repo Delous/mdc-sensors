@@ -1,10 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Index, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import DateTime, Index, Integer, JSON, func
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.schema import Identity
 
 
 class Base(DeclarativeBase):
@@ -18,15 +16,15 @@ class MeasurementRecord(Base):
     )
 
     id: Mapped[int] = mapped_column(
-        BigInteger,
-        Identity(),
+        Integer,
         primary_key=True,
+        autoincrement=True,
     )
     ts: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
     )
-    payload: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
+    payload: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

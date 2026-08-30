@@ -27,16 +27,16 @@ async def send_http_periodically(
     settings: Settings,
     repository: MeasurementRepository,
 ) -> None:
-    failed_delay = settings.send_interval_seconds
+    delay = settings.send_interval_seconds
     timeout = aiohttp.ClientTimeout(total=settings.http_timeout_seconds)
 
     async with aiohttp.ClientSession(timeout=timeout) as session:
         while True:
-            await asyncio.sleep(settings.send_interval_seconds)
+            await asyncio.sleep(delay)
 
             rows = await repository.load_batch_for_send(settings.send_batch_size)
             if not rows:
-                failed_delay = settings.send_interval_seconds
+                delay = settings.send_interval_seconds
                 continue
 
             data_for_request, sent_rows = prepare_request(rows)
@@ -52,7 +52,7 @@ async def send_http_periodically(
                         await repository.delete_sent_measurements(
                             [row.id for row in sent_rows],
                         )
-                        failed_delay = settings.send_interval_seconds
+                        delay = settings.send_interval_seconds
                         print(f"POST sent. Records: {len(sent_rows)}")
                         continue
 
@@ -63,8 +63,8 @@ async def send_http_periodically(
             except Exception as exc:
                 print(f"POST error: {exc}")
 
-            await asyncio.sleep(failed_delay)
-            failed_delay = min(
-                failed_delay * 2,
+            await asyncio.sleep(delay)
+            delay = min(
+                delay * 2,
                 settings.failed_send_max_delay_seconds,
             )

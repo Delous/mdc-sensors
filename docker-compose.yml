@@ -1,37 +1,14 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: mdc_sensors
-      POSTGRES_USER: mdc
-      POSTGRES_PASSWORD: mdc
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mdc -d mdc_sensors"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   app:
-    build: .
+    image: delous/mdc-sensors
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://mdc:mdc@postgres:5432/mdc_sensors
-      SERIAL_PORT: /dev/ttyUSB0
-      SERIAL_BAUDRATE: 115200
       API_URL: https://proka-bel.ru/api/v1/values
-      SEND_INTERVAL_SECONDS: 5
-      HTTP_TIMEOUT_SECONDS: 10
-      SEND_BATCH_SIZE: 500
-      FAILED_SEND_MAX_DELAY_SECONDS: 60
-      MAX_QUEUE_ROWS: 100000
+      DEVICE_ID: orangepi_prokabel
+    volumes:
+      - data:/data
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
 
 volumes:
-  postgres_data:
+  data:

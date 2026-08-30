@@ -1,6 +1,7 @@
-from datetime import UTC, datetime
-
+import asyncio
 import serial_asyncio
+
+from datetime import UTC, datetime
 
 from config import Settings
 from db.repository import MeasurementRepository
@@ -15,7 +16,7 @@ def parse_serial_line(raw_line: bytes) -> tuple[datetime, list[str]]:
     lines = raw_line.strip(b"\r\n").decode(errors="replace").split("\r")
     for line in lines:
         if line.startswith("addrSens"):
-            payload.append(line.replace("addrSens ", "", 1))
+            payload.append(line.replace("addrSens ", ""))
 
     return ts, payload
 
@@ -62,6 +63,4 @@ async def read_serial_periodically(
 
 
 async def _sleep_before_reconnect() -> None:
-    import asyncio
-
     await asyncio.sleep(5)
