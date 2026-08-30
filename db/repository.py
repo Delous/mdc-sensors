@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import delete, desc, select
 
@@ -19,8 +19,26 @@ class MeasurementRepository:
         self._max_queue_rows = max_queue_rows
 
     async def save_measurement(self, ts: datetime, payload: list[str]) -> None:
+        ts_second = ts.replace(microsecond=0)
+        next_second = ts_second + timedelta(seconds=1)
+
         async with session_context() as session:
-            session.add(MeasurementRecord(ts=ts, payload=payload))
+            existing_record = await session.scalar(
+                select(MeasurementRecord)
+                .where(
+                    MeasurementRecord.ts >= ts_second,
+                    MeasurementRecord.ts < next_second,
+                )
+                .order_by(MeasurementRecord.id)
+                .limit(1)
+            )
+
+            if existing_record is None:
+                session.add(MeasurementRecord(ts=ts_second, payload=payload))
+                return
+
+            existing_record.ts = ts_second
+            existing_record.payload = payload
 
     async def prune_old_measurements(self) -> None:
         if self._max_queue_rows <= 0:

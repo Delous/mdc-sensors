@@ -27,7 +27,7 @@ async def read_serial_periodically(
 ) -> None:
     while True:
         try:
-            reader, _ = await serial_asyncio.open_serial_connection(
+            reader, writer = await serial_asyncio.open_serial_connection(
                 url=settings.serial_port,
                 baudrate=settings.serial_baudrate,
             )
@@ -39,27 +39,34 @@ async def read_serial_periodically(
 
         saved_rows = 0
 
-        while True:
+        try:
+            while True:
+                try:
+                    line = await reader.readline()
+                    if not line:
+                        print("Empty serial line received")
+                        continue
+
+                    ts, payload = parse_serial_line(line)
+                    if not payload:
+                        continue
+
+                    await repository.save_measurement(ts, payload)
+                    saved_rows += 1
+                    if saved_rows >= PRUNE_EVERY_SAVED_ROWS:
+                        await repository.prune_old_measurements()
+                        saved_rows = 0
+
+                    print(f"Saved measurement: ts={ts.isoformat()}, values={payload}")
+                except Exception as exc:
+                    print(f"Serial read error: {exc}")
+                    break
+        finally:
+            writer.close()
             try:
-                line = await reader.readline()
-                if not line:
-                    print("Empty serial line received")
-                    continue
-
-                ts, payload = parse_serial_line(line)
-                if not payload:
-                    continue
-
-                await repository.save_measurement(ts, payload)
-                saved_rows += 1
-                if saved_rows >= PRUNE_EVERY_SAVED_ROWS:
-                    await repository.prune_old_measurements()
-                    saved_rows = 0
-
-                print(f"Saved measurement: ts={ts.isoformat()}, values={payload}")
-            except Exception as exc:
-                print(f"Serial read error: {exc}")
-                break
+                await writer.wait_closed()
+            except AttributeError:
+                pass
 
 
 async def _sleep_before_reconnect() -> None:

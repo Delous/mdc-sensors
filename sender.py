@@ -63,7 +63,6 @@ async def send_http_periodically(
             except Exception as exc:
                 print(f"POST error: {exc}")
 
-            await asyncio.sleep(delay)
             delay = min(
                 delay * 2,
                 settings.failed_send_max_delay_seconds,
