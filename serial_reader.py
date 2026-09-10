@@ -34,7 +34,7 @@ async def read_serial_periodically(
             print(f"Connected to serial port {settings.serial_port}")
         except Exception as exc:
             print(f"Serial port {settings.serial_port} is unavailable: {exc}")
-            await _sleep_before_reconnect()
+            await asyncio.sleep(5)
             continue
 
         saved_rows = 0
@@ -44,8 +44,8 @@ async def read_serial_periodically(
                 try:
                     line = await reader.readline()
                     if not line:
-                        print("Empty serial line received")
-                        continue
+                        print("Serial connection closed")
+                        break
 
                     ts, payload = parse_serial_line(line)
                     if not payload:
@@ -62,12 +62,12 @@ async def read_serial_periodically(
                     print(f"Serial read error: {exc}")
                     break
         finally:
-            writer.close()
             try:
-                await writer.wait_closed()
+                writer.close()
+                await asyncio.wait_for(writer.wait_closed(), timeout=5)
             except AttributeError:
                 pass
+            except Exception as exc:
+                print(f"Serial close error: {exc}")
 
-
-async def _sleep_before_reconnect() -> None:
-    await asyncio.sleep(5)
+        await asyncio.sleep(5)
